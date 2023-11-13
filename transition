@@ -1,0 +1,62 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.SceneManagement;
+using UnityEngine.UI;
+
+public class Transition : MonoBehaviour
+{
+    public static Transition instance;
+
+    public Image transitionImage;
+    private void Awake()
+    {
+        //Creamos una instancia unica de esta clase
+        if (instance == null)
+        {
+            instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
+
+        CallTransition("Game1");
+    }
+
+    public void CallTransition(string sceneId)
+    {
+        StartCoroutine(TransitionHandler(sceneId));
+    }
+
+    public IEnumerator TransitionHandler(string id)
+    {
+        //Comenzamos la transicion
+        float duration = .5f;
+        float seconds = Time.time + duration;
+
+        while (seconds > Time.time)
+        {
+            transitionImage.fillAmount = 1 - (seconds - Time.time) / duration;
+            yield return new WaitForEndOfFrame();
+        }
+        transitionImage.fillAmount = 1;
+
+        //Cargamos la escena
+        AsyncOperation asyncOperation = SceneManager.LoadSceneAsync(id);
+
+        yield return new WaitUntil(() => asyncOperation.isDone);
+
+        //Terminamos la transicion
+        duration = .5f;
+        seconds = Time.time + duration;
+
+        while (seconds > Time.time)
+        {
+            transitionImage.fillAmount = (seconds - Time.time) / duration;
+            yield return new WaitForEndOfFrame();
+        }
+        transitionImage.fillAmount = 0;
+    }
+}
